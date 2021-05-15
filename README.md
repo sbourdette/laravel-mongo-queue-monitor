@@ -2,6 +2,7 @@
 
 
 This package offers monitoring like [Laravel Horizon](https://laravel.com/docs/horizon) for MongoDB database queue.
+
 This package is a fork of romanzipp's [laravel-queue-monitor](https://github.com/romanzipp/Laravel-Queue-Monitor)
 
 This package require Jenssegers [laravel-mongodb](https://github.com/jenssegers/laravel-mongodb)
