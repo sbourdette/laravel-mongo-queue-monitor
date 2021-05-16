@@ -15,7 +15,10 @@ class MongoQueueMonitorRoutes
     {
         return function (array $options = []) {
             /** @var \Illuminate\Routing\Router $this */
-            $this->get('', '\sbourdette\MongoQueueMonitor\Controllers\ShowQueueMonitorController')->name('queue-monitor::index');
+
+						$this->redirect('', 'index');
+
+						$this->get('index/{view?}', '\sbourdette\MongoQueueMonitor\Controllers\ShowQueueMonitorController')->name('queue-monitor::indexview');
 
             if (config('queue-monitor.ui.allow_deletion')) {
                 $this->delete('monitors/{monitor}', '\sbourdette\MongoQueueMonitor\Controllers\DeleteMonitorController')->name('queue-monitor::destroy');

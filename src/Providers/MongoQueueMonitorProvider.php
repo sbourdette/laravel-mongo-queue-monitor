@@ -11,6 +11,7 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+
 use sbourdette\MongoQueueMonitor\Routes\MongoQueueMonitorRoutes;
 use sbourdette\MongoQueueMonitor\Services\QueueMonitor;
 
@@ -68,6 +69,7 @@ class MongoQueueMonitorProvider extends ServiceProvider
         $manager->exceptionOccurred(static function (JobExceptionOccurred $event) {
             QueueMonitor::handleJobExceptionOccurred($event);
         });
+
     }
 
     /**

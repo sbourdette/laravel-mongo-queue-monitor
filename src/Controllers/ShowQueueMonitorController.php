@@ -3,28 +3,29 @@
 namespace sbourdette\MongoQueueMonitor\Controllers;
 
 use Carbon\Carbon;
-//use Illuminate\Database\Eloquent\Builder;
+use MongoDB\BSON\UTCDateTime;
 use Jenssegers\Mongodb\Eloquent\Builder;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+
+
 use sbourdette\MongoQueueMonitor\Controllers\Payloads\Metric;
 use sbourdette\MongoQueueMonitor\Controllers\Payloads\Metrics;
 use sbourdette\MongoQueueMonitor\Models\Contracts\MonitorContract;
 use sbourdette\MongoQueueMonitor\Services\QueueMonitor;
 
-
-use Log;
+use Illuminate\Support\Facades\View;
 
 class ShowQueueMonitorController
 {
 
     public function __invoke(Request $request)
     {
-        $data = $request->validate([
+				$data = $request->validate([
             'type' => ['nullable', 'string', Rule::in(['all', 'pending', 'running', 'failed', 'succeeded'])],
             'queue' => ['nullable', 'string'],
+						'view' => ['nullable', 'string']
         ]);
 
         $filters = [
@@ -80,7 +81,14 @@ class ShowQueueMonitorController
             $metrics = $this->collectMetrics();
         }
 
-        return view('queue-monitor::jobs', [
+				if (View::exists($request->view)) {
+					$viewname = $request->view;
+				}
+				else {
+					$viewname = 'queue-monitor::jobs';
+				}
+
+        return view($viewname, [
             'jobs' => $jobs,
             'filters' => $filters,
             'queues' => $queues,
@@ -91,8 +99,8 @@ class ShowQueueMonitorController
     public function collectMetrics(): Metrics
     {
         $timeFrame = config('queue-monitor.ui.metrics_time_frame') ?? 2;
-				$lowerlimit = new \MongoDB\BSON\UTCDateTime(Carbon::now()->subDays($timeFrame)->timestamp);
-				$comparelowerlimit = new \MongoDB\BSON\UTCDateTime(Carbon::now()->subDays($timeFrame * 2)->timestamp);
+				$lowerlimit = new UTCDateTime(Carbon::now()->subDays($timeFrame)->timestamp);
+				$comparelowerlimit = new UTCDateTime(Carbon::now()->subDays($timeFrame * 2)->timestamp);
 
         $metrics = new Metrics();
 
