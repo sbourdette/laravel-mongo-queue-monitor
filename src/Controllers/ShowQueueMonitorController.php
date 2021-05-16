@@ -130,7 +130,9 @@ class ShowQueueMonitorController
 
 				$pendingJobsCount = QueueMonitor::getModel()->Pending()->count();
 
-				$pendingJobsMinDate = QueueMonitor::getModel()->Pending()->min('queued_at')->toDateTime();
+				$pendingJobsMinDate = QueueMonitor::getModel()->Pending()->min('queued_at');
+
+				$pendingJobsMinDate = ($pendingJobsMinDate) ? $pendingJobsMinDate->toDateTime()->format('Y-m-d H:i:s') : "";
 
 				$aggregatedComparisonInfo = QueueMonitor::getModel()->raw( function ( $collection ) use ($aggregationColumns, $lowerlimit, $comparelowerlimit) {
 									return $collection->aggregate(
@@ -154,7 +156,7 @@ class ShowQueueMonitorController
           new Metric('Total Jobs Executed', $aggregatedInfo->count, Null, $aggregatedComparisonInfo->count, '%d')
         );
 				$metrics->push(
-          new Metric('Pending Jobs', $pendingJobsCount, "Oldest pending job date : " . $pendingJobsMinDate->format('Y-m-d H:i:s'), Null, '%d')
+          new Metric('Pending Jobs', $pendingJobsCount, "Oldest pending job date : " . $pendingJobsMinDate, Null, '%d')
         );
 				$metrics->push(
           new Metric('Total Execution Time', $aggregatedInfo->total_time_elapsed, Null, $aggregatedComparisonInfo->total_time_elapsed, '%0.4fs')

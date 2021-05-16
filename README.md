@@ -26,7 +26,7 @@ composer require sbourdette/laravel-mongo-queue-monitor
 Copy configuration & migration to your project:
 
 ```
-php artisan vendor:publish --provider="sbourdette\MongoQueueMonitor\Providers\QueueMonitorProvider"
+php artisan vendor:publish --provider="sbourdette\MongoQueueMonitor\Providers\MongoQueueMonitorProvider"
 ```
 
 Migrate the Queue Monitoring table. The table name can be configured in the config file or via the published migration.
