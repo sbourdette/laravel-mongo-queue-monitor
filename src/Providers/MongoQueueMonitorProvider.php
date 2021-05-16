@@ -14,6 +14,8 @@ use Illuminate\Support\ServiceProvider;
 use sbourdette\MongoQueueMonitor\Routes\MongoQueueMonitorRoutes;
 use sbourdette\MongoQueueMonitor\Services\QueueMonitor;
 
+use sbourdette\MongoQueueMonitor\Providers\MongoQueueMonitorComponentsProvider;
+
 class MongoQueueMonitorProvider extends ServiceProvider
 {
     /**
@@ -75,7 +77,10 @@ class MongoQueueMonitorProvider extends ServiceProvider
      */
     public function register()
     {
-        if ( ! $this->app->configurationIsCached()) {
+				//Register Blade X Components
+				$this->app->register('sbourdette\MongoQueueMonitor\Providers\MongoQueueMonitorComponentsProvider');
+
+				if ( ! $this->app->configurationIsCached()) {
             $this->mergeConfigFrom(
                 __DIR__ . '/../../config/queue-monitor.php',
                 'queue-monitor'
