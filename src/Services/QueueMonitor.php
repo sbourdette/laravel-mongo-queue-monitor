@@ -148,6 +148,7 @@ class QueueMonitor
 							'finished_at_exact' => Null,
 
 	        ]);
+				}
 				catch(Throwable $e) {
 							Log::error('sbourdette/MongoQueueMonitor - jobStarted - unable to create Monitor : ' . $e);
 					}
