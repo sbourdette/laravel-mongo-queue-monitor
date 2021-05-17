@@ -14,6 +14,8 @@ use sbourdette\MongoQueueMonitor\Models\Contracts\MonitorContract;
 use sbourdette\MongoQueueMonitor\Traits\IsMonitored;
 use Throwable;
 
+use Log;
+
 class QueueMonitor
 {
     private const TIMESTAMP_EXACT_FORMAT = 'Y-m-d H:i:s.u';
@@ -131,19 +133,25 @@ class QueueMonitor
 
         $model = self::getModel();
 
-        $model::create([
-            'job_id' => $event->id,
-            'name' => get_class($event->job),
-            'queue' => $event->job->queue ?? 'default',
-						'queued_at' => $now,
-            'queued_at_exact' => $now->format(self::TIMESTAMP_EXACT_FORMAT),
-            'started_at' => Null,
-            'started_at_exact' => Null,
-            'attempt' => 0,
-						'finished_at' => Null,
-						'finished_at_exact' => Null,
+				try {
 
-        ]);
+	        $model::create([
+	            'job_id' => $event->id,
+	            'name' => get_class($event->job),
+	            'queue' => $event->job->queue ?? 'default',
+							'queued_at' => $now,
+	            'queued_at_exact' => $now->format(self::TIMESTAMP_EXACT_FORMAT),
+	            'started_at' => Null,
+	            'started_at_exact' => Null,
+	            'attempt' => 0,
+							'finished_at' => Null,
+							'finished_at_exact' => Null,
+
+	        ]);
+				catch(Throwable $e) {
+							Log::error('sbourdette/MongoQueueMonitor - jobStarted - unable to create Monitor : ' . $e);
+					}
+
     }
 
 
@@ -162,22 +170,29 @@ class QueueMonitor
 
         $now = Carbon::now();
 
-        $model = self::getModel();
+	        $model = self::getModel();
 
-				$monitor = $model::query()
-            ->where('job_id', self::getJobId($job))
-            ->first();
+//					$model::where('job_id', self::getJobId($job))->delete();
 
-				$attributes = [
-					'name' => $job->resolveName(),
-					'queue' => $job->getQueue(),
-					'started_at' => $now,
-					'started_at_exact' => $now->format(self::TIMESTAMP_EXACT_FORMAT),
-					'attempt' => $job->attempts(),
-				];
+					$monitor = $model::query()
+	            ->where('job_id', self::getJobId($job))
+	            ->first();
 
-				$monitor->update($attributes);
+					$attributes = [
+						'name' => $job->resolveName(),
+						'queue' => $job->getQueue(),
+						'started_at' => $now,
+						'started_at_exact' => $now->format(self::TIMESTAMP_EXACT_FORMAT),
+						'attempt' => $job->attempts(),
+					];
 
+				try {
+						$monitor->update($attributes);
+				}
+				catch(Throwable $e) {
+						Log::error('sbourdette/MongoQueueMonitor - jobStarted - unable to update Monitor : Monitor job id = ' . self::getJobId($job) . ' exists ? ');
+						Log::debug($e);
+				}
     }
 
     /**
@@ -203,42 +218,43 @@ class QueueMonitor
             ->orderByDesc('started_at')
             ->first();
 
-        if (null === $monitor) {
-            return;
-        }
-
         /** @var MonitorContract $monitor */
         $now = Carbon::now();
 
-        if ($startedAt = $monitor->getStartedAtExact()) {
-            $timeElapsed = (float) $startedAt->diffInSeconds($now) + $startedAt->diff($now)->f;
-        }
+				try {
+	        if ($startedAt = $monitor->getStartedAtExact()) {
+	            $timeElapsed = (float) $startedAt->diffInSeconds($now) + $startedAt->diff($now)->f;
+	        }
 
-        /** @var IsMonitored $resolvedJob */
-        $resolvedJob = $job->resolveName();
+	        /** @var IsMonitored $resolvedJob */
+	        $resolvedJob = $job->resolveName();
 
-        if (null === $exception && false === $resolvedJob::keepMonitorOnSuccess()) {
-            $monitor->delete();
+	        if (null === $exception && false === $resolvedJob::keepMonitorOnSuccess()) {
+	            $monitor->delete();
+	            return;
+	        }
 
-            return;
-        }
+	        $attributes = [
+	            'finished_at' => $now,
+	            'finished_at_exact' => $now->format(self::TIMESTAMP_EXACT_FORMAT),
+	            'time_elapsed' => $timeElapsed ?? 0.0,
+	            'failed' => $failed,
+	        ];
 
-        $attributes = [
-            'finished_at' => $now,
-            'finished_at_exact' => $now->format(self::TIMESTAMP_EXACT_FORMAT),
-            'time_elapsed' => $timeElapsed ?? 0.0,
-            'failed' => $failed,
-        ];
+	        if (null !== $exception) {
+	            $attributes += [
+	                'exception' => mb_strcut((string) $exception, 0, min(PHP_INT_MAX, self::MAX_BYTES_LONGTEXT)),
+	                'exception_class' => get_class($exception),
+	                'exception_message' => mb_strcut($exception->getMessage(), 0, self::MAX_BYTES_TEXT),
+	            ];
+	        }
 
-        if (null !== $exception) {
-            $attributes += [
-                'exception' => mb_strcut((string) $exception, 0, min(PHP_INT_MAX, self::MAX_BYTES_LONGTEXT)),
-                'exception_class' => get_class($exception),
-                'exception_message' => mb_strcut($exception->getMessage(), 0, self::MAX_BYTES_TEXT),
-            ];
-        }
-
-        $monitor->update($attributes);
+					$monitor->update($attributes);
+				}
+				catch(Throwable $e) {
+					Log::error('sbourdette/MongoQueueMonitor - jobFinished - unable to update Monitor : Monitor job id = ' . self::getJobId($job) . ' exists ? ');
+					Log::debug($e);
+				}
     }
 
     /**
