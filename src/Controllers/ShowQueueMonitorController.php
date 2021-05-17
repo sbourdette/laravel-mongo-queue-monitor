@@ -9,7 +9,6 @@ use Jenssegers\Mongodb\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-
 use sbourdette\MongoQueueMonitor\Controllers\Payloads\Metric;
 use sbourdette\MongoQueueMonitor\Controllers\Payloads\Metrics;
 use sbourdette\MongoQueueMonitor\Models\Contracts\MonitorContract;
@@ -20,7 +19,7 @@ use Illuminate\Support\Facades\View;
 class ShowQueueMonitorController
 {
 
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, String $viewname = null)
     {
 				$data = $request->validate([
             'type' => ['nullable', 'string', Rule::in(['all', 'pending', 'running', 'failed', 'succeeded'])],
@@ -81,10 +80,7 @@ class ShowQueueMonitorController
             $metrics = $this->collectMetrics();
         }
 
-				if (View::exists($request->view)) {
-					$viewname = $request->view;
-				}
-				else {
+				if (!View::exists($viewname)) {
 					$viewname = 'queue-monitor::jobs';
 				}
 
@@ -92,7 +88,7 @@ class ShowQueueMonitorController
             'jobs' => $jobs,
             'filters' => $filters,
             'queues' => $queues,
-            'metrics' => $metrics,
+            'metrics' => $metrics
         ]);
     }
 

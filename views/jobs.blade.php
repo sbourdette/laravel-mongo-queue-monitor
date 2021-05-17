@@ -10,13 +10,15 @@
     <h1 class="mb-6 text-5xl text-blue-900 font-bold">
         Mongo Queue Monitor
     </h1>
-    @isset($metrics)
-      <div class="flex flex-wrap -mx-4 mb-2">
-        @foreach($metrics->all() as $metric)
-					<x-metric-card :metric="$metric"></x-metric-card>
-        @endforeach
-      </div>
-    @endisset
+		@if(config('queue-monitor.ui.show_metrics'))
+	    @isset($metrics)
+	      <div class="flex flex-wrap -mx-4 mb-2">
+	        @foreach($metrics->all() as $metric)
+						<x-metric-card :metric="$metric"></x-metric-card>
+	        @endforeach
+	      </div>
+	    @endisset
+		@endif
 		<x-filters-form :filters="$filters" :queues="$queues"></x-filters-form>
 		<x-jobs-list :jobs="$jobs"></x-jobs-list>
     @if(config('queue-monitor.ui.allow_purge'))

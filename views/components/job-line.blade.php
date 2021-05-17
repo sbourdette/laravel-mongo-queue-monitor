@@ -76,7 +76,7 @@
 		</td>
 		@if ($allowDeletion)
 			<td class="p-4 text-gray-800 text-sm leading-5 border-b border-gray-200">
-				<x-job-delete-form :job="$job"></x-job-delete-form>
+				<x-job-delete-form :job="$job" :viewname="$viewname"></x-job-delete-form>
 			</td>
 		@endif
 </tr>

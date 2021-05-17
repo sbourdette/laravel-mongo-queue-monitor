@@ -3,6 +3,8 @@
 namespace sbourdette\MongoQueueMonitor\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
+
 use sbourdette\MongoQueueMonitor\Models\MongoMonitorQueueModel;
 
 class DeleteMonitorController
@@ -11,6 +13,13 @@ class DeleteMonitorController
     {
         $monitor->delete();
 
-        return redirect()->route('queue-monitor::index');
+				if (($request->viewname) && (View::exists($request->viewname))) {
+					$viewname = $request->viewname;
+				}
+				else {
+					$viewname = '';
+				}
+
+        return redirect()->route('queue-monitor::index' , ['viewname' => $viewname]);
     }
 }

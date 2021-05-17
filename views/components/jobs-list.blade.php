@@ -20,7 +20,7 @@
 				</thead>
 				<tbody class="bg-white">
 						@forelse($jobs as $job)
-							<x-job-line :job="$job" :allowDeletion="config('queue-monitor.ui.allow_deletion')"></x-job-line>
+							<x-job-line :job="$job" :allowDeletion="config('queue-monitor.ui.allow_deletion')" :viewname="$viewname"></x-job-line>
 						@empty
 								<tr>
 										<td colspan="100" class="">
